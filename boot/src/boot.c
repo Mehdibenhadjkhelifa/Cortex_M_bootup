@@ -1,12 +1,66 @@
-extern void* END_STACK;
-void isr_reset(void){
+extern unsigned int _stored_data;
+extern unsigned int _start_data;
+extern unsigned int _end_data;
+extern unsigned int _start_bss;
+extern unsigned int _end_bss;
 
+extern void *END_STACK;
+
+static int zeroed_variable_in_bss;
+static int initialized_variable_in_data = 42;
+void main(void);
+void isr_reset(void) {
+    unsigned int *src, *dst;
+
+    /* Copy the .data section from flash to RAM. */
+    src = (unsigned int *) &_stored_data;
+    dst = (unsigned int *) &_start_data;
+    while (dst < (unsigned int *)&_end_data) {
+        *dst = *src;
+        dst++;
+        src++;
+    }
+
+    /* Initialize the BSS section to 0 */
+    dst = &_start_bss;
+    while (dst < (unsigned int *)&_end_bss) {
+        *dst = 0U;
+        dst++;
+    }
+
+    /* Run the program! */
+    main();
 }
-void isr_fault(void){
-    while(1);
+
+void isr_fault(void)
+{
+    /* Panic. */
+    while(1) ;;
 }
-void isr_empty(void){
+
+void isr_empty(void)
+{
+    /* Ignore the event and continue */
 }
+
+/* This is the main program loop.
+ *
+ * It is meant to be run within GDB to check the 
+ * addresses and the values of the variables in 
+ * .data and .bss sections.
+ *
+ */
+void main(void) {
+    int test = 0;
+    /* Increment test variables at each loop */
+    while(1) {
+        test++;
+        zeroed_variable_in_bss++;
+        initialized_variable_in_data++;
+    }
+}
+
+
 /* This is the interrupt vector.
  * 
  * It sits at the beginning of the flash image,
