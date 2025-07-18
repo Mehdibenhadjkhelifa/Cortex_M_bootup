@@ -20,10 +20,12 @@ bin/bootloader.bin: int/bootloader.elf
 int/app.elf: int/startup.o src/app.ld
 	$(LD) $(LDFLAGS) $< -o $@ -T src/app.ld -Map=int/app.map
 
-int/bootloader.elf: int/startup_bl.o src/bootloader.ld
-	$(LD) $(LDFLAGS) $< -o $@ -T src/bootloader.ld -Map=int/bootloader.map
+int/bootloader.elf: int/startup_bl.o int/utils.o src/bootloader.ld
+	$(LD) $(LDFLAGS) int/startup_bl.o int/utils.o -o $@ -T src/bootloader.ld -Map=int/bootloader.map
 int/startup_bl.o: src/startup_bl.c
 	mkdir -p int
+	$(CC) $(CFLAGS) -o $@ -c $<
+int/utils.o: src/utils.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 int/startup.o: src/startup.c
 	$(CC) $(CFLAGS) -o $@ -c $<

@@ -1,3 +1,4 @@
+#include "utils.h"
 typedef unsigned int uint32_t;
 extern unsigned int _stored_data;
 extern unsigned int _start_data;
@@ -41,7 +42,15 @@ void isr_svc(void)
 }
 
 void __attribute__((used, noreturn)) main(void) {
-
+        /* Increment test variables at each loop */
+    while(1) {
+        zeroed_variable_in_bss++;
+        initialized_variable_in_data++;
+        if ((zeroed_variable_in_bss % 1000) == 0) {
+            utils_open();
+            utils_close();
+        }
+    }
 }
 
 __attribute__ ((section(".isr_vector")))
