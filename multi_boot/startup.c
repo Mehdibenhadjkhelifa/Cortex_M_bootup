@@ -1,46 +1,50 @@
 #include <stdint.h>
+
 extern unsigned int _stored_data;
 extern unsigned int _start_data;
-extern unsigned int _start_bss;
 extern unsigned int _end_data;
+extern unsigned int _start_bss;
 extern unsigned int _end_bss;
-extern unsigned int _end;
+
+
 extern uint32_t *END_STACK;
-#define APP_OFFSET (0x00001000)
-#define BOOTLOADER
+
+static int zeroed_variable_in_bss;
+static int initialized_variable_in_data = 42;
 void main(void);
-void isr_reset(void){
-    unsigned int *src,*dst;
-    src = (unsigned int*) &_stored_data;
-    dst = (unsigned int*) &_start_data;
-    while (dst < (unsigned int*)&_end_data){
+void isr_reset(void) {
+    unsigned int *src, *dst;
+    src = (unsigned int *) &_stored_data;
+    dst = (unsigned int *) &_start_data;
+    while (dst < (unsigned int *)&_end_data) {
         *dst = *src;
         dst++;
         src++;
     }
     dst = &_start_bss;
-    while(dst < (unsigned int*)&_end_bss){
+    while (dst < (unsigned int *)&_end_bss) {
         *dst = 0U;
         dst++;
     }
     main();
 }
-void isr_fault(void){
-    while(1);;
+void isr_fault(void)
+{
+    while(1) ;
 }
 
-void isr_empty(void){
+void isr_empty(void)
+{
 }
-void main(void){
-    asm volatile("cpsid i");
-    uint32_t app_end_stack = (*((uint32_t*)(APP_OFFSET)));
-    void(* app_entry)(void);
-    app_entry = (void *)(*((uint32_t *)(APP_OFFSET + 4)));
-    asm volatile("msr msp, %0" :: "r"(app_end_stack));
-    uint32_t *VTOR = (uint32_t *)0xE000ED08;
-    *VTOR = (uint32_t)APP_OFFSET;
-    asm volatile("mov pc, %0" ::"r"(app_entry));
+
+void isr_svc(void)
+{
 }
+
+void __attribute__((used, noreturn)) main(void) {
+
+}
+
 __attribute__ ((section(".isr_vector")))
 void (* const IV[])(void) =
 {
@@ -52,7 +56,7 @@ void (* const IV[])(void) =
 	isr_fault,                   // BusFault
 	isr_fault,                   // UsageFault
 	0, 0, 0, 0,                  // 4x reserved
-	isr_empty,                   // SVC
+	isr_svc,                   // SVC
 	isr_empty,                   // DebugMonitor
 	0,                           // reserved
 	isr_empty,                   // PendSV
