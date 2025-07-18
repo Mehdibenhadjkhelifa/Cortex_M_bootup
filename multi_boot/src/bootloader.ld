@@ -3,8 +3,7 @@ MEMORY {
     RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00010000
 }
 SECTIONS {
-    .text:
-    {
+    .text :{
         _start_text = .;
         KEEP(*(.isr_vector)) 
         . = 0x400;
@@ -18,10 +17,10 @@ SECTIONS {
     .data : AT(_stored_data){
         _start_data = .;
         KEEP(*(.data*))
-        . = ALIGN(4)
+        . = ALIGN(4);
         _end_data = .;
     } > RAM
-    .bss : (NOLOAD) {
+    .bss (NOLOAD) : {
         _start_bss = .;
         *(.bss*)
         *(COMMON)
